@@ -1,10 +1,12 @@
 import decimal
-import sys
 import functools
 
 from lxml import objectify
 
-from refreshbooks import client, adapters, transport
+from refreshbooks import client, transport
+
+from refreshbooks.codecs import default_request_encoder
+from refreshbooks.codecs import default_response_decoder
 
 try:
     from refreshbooks.optional import oauth as os
@@ -38,32 +40,6 @@ def check_decimal_element(decimal_string):
 decimal_type = objectify.PyType('decimal', check_decimal_element,
                                 DecimalElement)
 decimal_type.register(before='float')
-
-default_request_encoder = adapters.xml_request
-
-def default_response_decoder(*args, **kwargs):
-    headers, content = args[0]
-    if headers['content-type'].startswith('application/xml'):
-        return adapters.fail_to_exception_response(
-            objectify.fromstring(content, **kwargs)
-        )
-    else:
-        import base64
-        return base64.b64encode(content)
-
-def logging_request_encoder(method, **params):
-    encoded = default_request_encoder(method, **params)
-
-    print >>sys.stderr, "--- Request (%r, %r) ---" % (method, params)
-    print >>sys.stderr, encoded
-
-    return encoded
-
-def logging_response_decoder(response):
-    print >>sys.stderr, "--- Response ---"
-    print >>sys.stderr, response
-
-    return default_response_decoder(response)
 
 def build_headers(authorization_headers, user_agent):
     headers = transport.KeepAliveHeaders(authorization_headers)
