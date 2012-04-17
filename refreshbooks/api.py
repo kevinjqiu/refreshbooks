@@ -72,15 +72,18 @@ def AuthorizingClient(
     auth,
     request_encoder,
     response_decoder,
-    user_agent=None
+    user_agent=None,
+    **kwargs
 ):
     """Creates a Freshbooks client for a freshbooks domain, using
     an auth object.
     """
 
+    verify_ssl_cert = kwargs.get('verify_ssl_cert', True)
     http_transport = transport.HttpTransport(
         api_url(domain),
-        build_headers(auth, user_agent)
+        build_headers(auth, user_agent),
+        verify_ssl_cert=verify_ssl_cert
     )
 
     return client.Client(
@@ -95,6 +98,7 @@ def TokenClient(
     user_agent=None,
     request_encoder=default_request_encoder,
     response_decoder=default_response_decoder,
+    **kwargs
 ):
     """Creates a Freshbooks client for a freshbooks domain, using
     token-based auth.
@@ -114,7 +118,8 @@ def TokenClient(
         transport.TokenAuthorization(token),
         request_encoder,
         response_decoder,
-        user_agent=user_agent
+        user_agent=user_agent,
+        **kwargs
     )
 
 def OAuthClient(

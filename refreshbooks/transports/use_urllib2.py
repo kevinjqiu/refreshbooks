@@ -3,7 +3,12 @@ import urllib2 as u
 from refreshbooks import exceptions as exc
 
 class Transport(object):
-    def __init__(self, url, headers_factory):
+    def __init__(self, url, headers_factory, verify_ssl_cert=False):
+        if verify_ssl_cert:
+            # urllib2 doesn't do SSL certificate validation,
+            # verify_ssl_cert flag is ignored.
+            import warnings
+            warnings.warn("urllib2 doesn't support SSL cert verification.")
         self.url = url
         self.headers_factory = headers_factory
 
