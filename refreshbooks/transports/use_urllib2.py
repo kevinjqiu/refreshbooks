@@ -21,7 +21,7 @@ class Transport(object):
         try:
             fp = u.urlopen(request)
             headers = dict(
-                x.strip().split(':')
+                x.strip().split(':', 1)
                 for x in fp.info().headers
             )
             return headers, fp.read()
