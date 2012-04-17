@@ -7,10 +7,10 @@ def field(name, value):
 
 def type(name, fields):
     type_element = etree.Element(name)
-    
+
     for field in fields:
         type_element.append(field)
-    
+
     return type_element
 
 def request(name, parameters, _element_name='request'):

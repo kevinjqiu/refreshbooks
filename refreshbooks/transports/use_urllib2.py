@@ -6,7 +6,7 @@ class Transport(object):
     def __init__(self, url, headers_factory):
         self.url = url
         self.headers_factory = headers_factory
-    
+
     def __call__(self, entity):
         request = u.Request(
             url=self.url,

@@ -4,7 +4,7 @@ from refreshbooks import adapters
 
 def test_request_xml_simple():
     xml = adapters.xml_request('client.list')
-    
+
     # test that xml looks roughly like <request method="client.list"/>
     request_document = etree.fromstring(xml)
     assert 'request' == request_document.tag
@@ -13,7 +13,7 @@ def test_request_xml_simple():
 
 def test_request_xml_simple_params():
     xml = adapters.xml_request('client.get', id="5", monkey="butter")
-    
+
     # test that xml looks roughly like either
     # <request method="client.get"><id>5</id><monkey>butter</monkey></request>
     # or
@@ -39,7 +39,7 @@ def test_request_xml_dict_params():
         id="5",
         monkey=dict(name="butter")
     )
-    
+
     # test that xml looks roughly like either
     # <request method="client.get">
     #     <id>5</id>
@@ -76,7 +76,7 @@ def test_request_xml_list_params():
             ('monkey', dict(name="butter"))
         ]
     )
-    
+
     # test that xml looks roughly like either
     # <request method="client.get">
     #     <id>5</id>

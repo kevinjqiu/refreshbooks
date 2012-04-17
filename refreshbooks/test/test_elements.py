@@ -3,7 +3,7 @@ from refreshbooks import elements
 
 def test_field():
     field_element = elements.field("example", "A Test Value Here")
-    
+
     assert "<example>A Test Value Here</example>" == etree.tostring(
         field_element
     )
@@ -13,7 +13,7 @@ def test_simple_type_strings():
         elements.field('name', 'Bob'),
         elements.field('age', '27')
     ])
-    
+
     assert 'example' == type_element.tag
     assert 2 == len(type_element)
     assert 'name' == type_element[0].tag
@@ -23,9 +23,9 @@ def test_simple_type_strings():
 
 def test_simple_request():
     body = elements.field("foo", "bar")
-    
+
     request_element = elements.request("client.list", [body])
-    
+
     assert 'request' == request_element.tag
     assert {'method': 'client.list'} == request_element.attrib
     assert 1 == len(request_element)

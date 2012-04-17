@@ -7,9 +7,9 @@ class Transport(object):
         self.client = httplib2.Http()
         self.url = url
         self.headers_factory = headers_factory
-    
+
     def __call__(self, entity):
-        
+
         resp, content = self.client.request(
             self.url,
             'POST',
@@ -18,5 +18,5 @@ class Transport(object):
         )
         if resp.status >= 400:
             raise exc.TransportException(resp.status, content)
-        
+
         return content

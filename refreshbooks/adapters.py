@@ -8,10 +8,10 @@ from refreshbooks import elements, client
 _stringable_types = frozenset([float, int, decimal.Decimal])
 
 def encode_as_simple_from_element(name, value):
-    """Creates an etree element following the simple field convention. To 
-    ease reuse of returned data in future calls, we smash anything that looks 
+    """Creates an etree element following the simple field convention. To
+    ease reuse of returned data in future calls, we smash anything that looks
     like an ObjectifiedDataElement to unicode:
-    
+
         >>> value = objectify.DataElement(5)
         >>> element = encode_as_simple('foo', value)
         >>> element.tag == 'foo'
@@ -24,7 +24,7 @@ def encode_as_simple_from_element(name, value):
 def encode_as_simple(name, value):
     """Creates an etree element following the simple field convention. Values
     are assumed to be strs, unicodes, ints, floats, or Decimals:
-    
+
         >>> element = encode_as_simple('foo', '5')
         >>> element.tag == 'foo'
         True
@@ -88,11 +88,11 @@ def xml_request(method, **params):
             for (name, value) in params.iteritems()
         ]
     )
-    
+
     return etree.tostring(request_document)
 
 def fail_to_exception_response(response):
     if response.attrib['status'] == 'fail':
         raise client.FailedRequest(response.error)
-    
+
     return response

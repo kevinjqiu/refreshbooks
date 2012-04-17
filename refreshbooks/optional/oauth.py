@@ -5,14 +5,14 @@ import oauth.oauth as oauth
 class OAuthAuthorization(object):
     """Generates headers for an OAuth Core 1.0 Revision A (say that three 
     times fast) request, given an oauth.Consumer and an oauth.Token.
-    
+
         >>> import oauth.oauth as oauth
         >>> consumer = oauth.OAuthConsumer("EXAMPLE", "CONSUMER")
         >>> token = oauth.OAuthToken("EXAMPLE", "TOKEN")
         >>> auth = OAuthAuthorization(consumer, token)
         >>> auth() # doctest:+ELLIPSIS
         {'Authorization': 'OAuth realm="", oauth_nonce="...", oauth_timestamp="...", oauth_consumer_key="EXAMPLE", oauth_signature_method="PLAINTEXT", oauth_version="1.0", oauth_token="EXAMPLE", oauth_signature="CONSUMER%26TOKEN"'}
-    
+
     """
     def __init__(self, consumer, token, sig_method=oauth.OAuthSignatureMethod_PLAINTEXT()):
         self.consumer = consumer

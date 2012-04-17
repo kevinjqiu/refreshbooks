@@ -15,7 +15,7 @@ except ImportError:
 
 def api_url(domain):
     """Returns the Freshbooks API URL for a given domain.
-    
+
         >>> api_url('billing.freshbooks.com')
         'https://billing.freshbooks.com/api/2.1/xml-in'
     """
@@ -35,7 +35,7 @@ def check_decimal_element(decimal_string):
         raise ValueError
 
 # register the decimal type with objectify
-decimal_type = objectify.PyType('decimal', check_decimal_element, 
+decimal_type = objectify.PyType('decimal', check_decimal_element,
                                 DecimalElement)
 decimal_type.register(before='float')
 
@@ -48,23 +48,23 @@ def default_response_decoder(*args, **kwargs):
 
 def logging_request_encoder(method, **params):
     encoded = default_request_encoder(method, **params)
-    
+
     print >>sys.stderr, "--- Request (%r, %r) ---" % (method, params)
     print >>sys.stderr, encoded
-    
+
     return encoded
 
 def logging_response_decoder(response):
     print >>sys.stderr, "--- Response ---"
     print >>sys.stderr, response
-    
+
     return default_response_decoder(response)
 
 def build_headers(authorization_headers, user_agent):
     headers = transport.KeepAliveHeaders(authorization_headers)
     if user_agent is not None:
         headers = transport.UserAgentHeaders(headers, user_agent)
-    
+
     return headers
 
 def AuthorizingClient(
@@ -77,12 +77,12 @@ def AuthorizingClient(
     """Creates a Freshbooks client for a freshbooks domain, using
     an auth object.
     """
-    
+
     http_transport = transport.HttpTransport(
         api_url(domain),
         build_headers(auth, user_agent)
     )
-    
+
     return client.Client(
         request_encoder,
         http_transport,
@@ -98,17 +98,17 @@ def TokenClient(
 ):
     """Creates a Freshbooks client for a freshbooks domain, using
     token-based auth.
-    
+
     The optional request_encoder and response_decoder parameters can be
     passed the logging_request_encoder and logging_response_decoder objects
     from this module, or custom encoders, to aid debugging or change the
     behaviour of refreshbooks' request-to-XML-to-response mapping.
-    
+
     The optional user_agent keyword parameter can be used to specify the
     user agent string passed to FreshBooks. If unset, a default user agent
     string is used.
     """
-    
+
     return AuthorizingClient(
         domain,
         transport.TokenAuthorization(token),
@@ -129,12 +129,12 @@ def OAuthClient(
 ):
     """Creates a Freshbooks client for a freshbooks domain, using
     OAuth. Token management is assumed to have been handled out of band.
-    
+
     The optional request_encoder and response_decoder parameters can be
     passed the logging_request_encoder and logging_response_decoder objects
     from this module, or custom encoders, to aid debugging or change the
     behaviour of refreshbooks' request-to-XML-to-response mapping.
-    
+
     The optional user_agent keyword parameter can be used to specify the
     user agent string passed to FreshBooks. If unset, a default user agent
     string is used.
@@ -154,7 +154,7 @@ def OAuthClient(
 def list_element_type(_name, **kwargs):
     """Convenience function for creating tuples that satisfy
     adapters.encode_as_list_of_dicts().
-    
+
         >>> list_element_type('foo', a='5')
         ('foo', {'a': '5'})
     """
@@ -162,14 +162,14 @@ def list_element_type(_name, **kwargs):
 
 class Types(object):
     """Convenience factory for list elements in API requests.
-    
+
         >>> types = Types()
         >>> types.line(id="5")
         ('line', {'id': '5'})
-    
+
     A module-scoped instance is available as refreshbooks.api.types.
     """
-    
+
     def __getattr__(self, name):
         return functools.partial(list_element_type, name)
 
