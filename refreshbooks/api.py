@@ -42,9 +42,14 @@ decimal_type.register(before='float')
 default_request_encoder = adapters.xml_request
 
 def default_response_decoder(*args, **kwargs):
-    return adapters.fail_to_exception_response(
-        objectify.fromstring(*args, **kwargs)
-    )
+    headers, content = args[0]
+    if headers['content-type'].startswith('application/xml'):
+        return adapters.fail_to_exception_response(
+            objectify.fromstring(content, **kwargs)
+        )
+    else:
+        import base64
+        return base64.b64encode(content)
 
 def logging_request_encoder(method, **params):
     encoded = default_request_encoder(method, **params)

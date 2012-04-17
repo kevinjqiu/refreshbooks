@@ -20,4 +20,4 @@ class Transport(object):
         if resp.status >= 400:
             raise exc.TransportException(resp.status, content)
 
-        return content
+        return resp.headers, content

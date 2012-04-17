@@ -19,6 +19,11 @@ class Transport(object):
             headers=self.headers_factory()
         )
         try:
-            return u.urlopen(request).read()
+            fp = u.urlopen(request)
+            headers = dict(
+                x.strip().split(':')
+                for x in fp.info().headers
+            )
+            return headers, fp.read()
         except u.HTTPError, e:
             raise exc.TransportException(e.code, e.read())
