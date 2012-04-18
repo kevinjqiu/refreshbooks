@@ -1,6 +1,7 @@
 import base64
 import httplib
 
+from functools import partial
 from refreshbooks import exceptions
 
 try:
@@ -45,24 +46,25 @@ class TokenAuthorization(object):
     def __call__(self):
         return self.headers
 
-class UserAgentHeaders(object):
-    def __init__(self, base_headers_factory, user_agent):
+class HeadersFactory(object):
+
+    def __init__(self, base_headers_factory, headers):
         self.base_headers_factory = base_headers_factory
-        self.user_agent = user_agent
+        self.headers = headers
 
     def __call__(self):
         headers = self.base_headers_factory()
-        headers['User-Agent'] = self.user_agent
+        for key, value in self.headers.iteritems():
+            headers[key] = value
         return headers
 
-class KeepAliveHeaders(object):
-    def __init__(self, base_headers_factory):
-        self.base_headers_factory = base_headers_factory
+UserAgentHeaders = lambda base_headers_factory, user_agent : \
+    HeadersFactory(base_headers_factory, {'User-Agent':user_agent})
 
-    def __call__(self):
-        headers = self.base_headers_factory()
-        headers['Connection'] = 'Keep-Alive'
-        return headers
+KeepAliveHeaders = partial(HeadersFactory, headers={'Connection':'Keep-Alive'})
+
+MultipartContentTypeHeaders = lambda base_headers_factory, subtype : \
+    HeadersFactory(base_headers_factory, {'Content-Type':'Multipart/%s' % subtype})
 
 HttpTransport = transport.Transport
 TransportException = exceptions.TransportException
