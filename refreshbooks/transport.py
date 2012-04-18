@@ -63,8 +63,9 @@ UserAgentHeaders = lambda base_headers_factory, user_agent : \
 
 KeepAliveHeaders = partial(HeadersFactory, headers={'Connection':'Keep-Alive'})
 
-MultipartContentTypeHeaders = lambda base_headers_factory, subtype : \
-    HeadersFactory(base_headers_factory, {'Content-Type':'Multipart/%s' % subtype})
+MultipartContentTypeHeaders = lambda base_headers_factory, subtype, boundary : \
+    HeadersFactory(base_headers_factory,
+        {'Content-Type':'multipart/%s; boundary="%s"' % (subtype, boundary)})
 
 HttpTransport = transport.Transport
 TransportException = exceptions.TransportException

@@ -1,5 +1,6 @@
 import sys
 import uuid
+import mimetypes
 
 from lxml import objectify
 from refreshbooks import adapters
@@ -25,25 +26,49 @@ def _collect_file_resources(request_obj):
 def universal_request_encoder(*args, **kwargs):
     # look for anything that looks like
     # a file in the request object.
-    if len(args) == 1:
-        return adapters.xml_request(*args, **kwargs)
+    method = args[0]
+    request_obj = kwargs.values()[0]
+    files = _collect_file_resources(request_obj)
 
-    if len(args) == 2:
-        method, request_obj = args
+    envelope = adapters.xml_request(
+        method,
+        **kwargs)
 
-        files = _collect_file_resources(request_obj)
+    boundary = uuid.uuid4().hex
 
-        envelope = adapters.xml_request(*[method, request_obj],
-            **kwargs)
+    if len(files) > 0:
+        lines = ["multipart posting",
+            "--%s" % boundary,
+            "Content-Type: application/xml",
+            "",
+            '<?xml version="1.0" encoding="utf-8"?>\n'+envelope,
+        ]
 
-        # combine envelope and files in a multipart/related request
-        # TODO: delegate this to transport?
+        for cid, file_to_upload in files.iteritems():
+            filename = file_to_upload.name
+            mimetype, _ = mimetypes.guess_type(filename)
+            lines.append("--%s" % boundary)
+            lines.append("Content-Type: %s" % mimetype)
+            lines.append('Content-Disposition: attachment; filename="%s"' % filename)
+            lines.append("Content-ID: <%s>" % cid)
+            lines.append('')
+            lines.append(file_to_upload.read())
+            lines.append('')
+            file_to_upload.close()
+
+        lines.append("--%s" % boundary)
+        lines.append('')
+
+    data = '\r\n'.join(lines)
+
+    return data, boundary
 
 def default_request_encoder(*args, **kwargs):
     return adapters.xml_request(*args, **kwargs)
 
 def default_response_decoder(*args, **kwargs):
     headers, content = args[0]
+
     if headers['content-type'].startswith('application/xml'):
         return adapters.fail_to_exception_response(
             objectify.fromstring(content, **kwargs)
