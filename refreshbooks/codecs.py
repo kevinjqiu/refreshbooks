@@ -12,7 +12,6 @@ def _collect_file_resources(request_obj):
     collect the file-like objects in the return value,
     and replace the file value with cid:XXXX.
     """
-    import pdb; pdb.set_trace()
     iteritems = request_obj.iteritems()
 
     retval = {}
@@ -26,7 +25,7 @@ def _collect_file_resources(request_obj):
             request_obj[key] = 'cid:%s' % cid
     return retval
 
-def universal_request_encoder(*args, **kwargs):
+def default_request_encoder(*args, **kwargs):
     """
     request_encoder returns a tuple:
         (entity, *headers_factory)
@@ -77,9 +76,6 @@ def universal_request_encoder(*args, **kwargs):
                             subtype='related',
                             boundary=boundary)
         return data, [headers_factory]
-
-def default_request_encoder(*args, **kwargs):
-    return adapters.xml_request(*args, **kwargs)
 
 def default_response_decoder(*args, **kwargs):
     headers, content = args[0]
