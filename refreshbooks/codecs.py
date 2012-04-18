@@ -2,14 +2,17 @@ import sys
 import uuid
 import mimetypes
 
+from functools import partial
 from lxml import objectify
 from refreshbooks import adapters
+from refreshbooks.transport import MultipartContentTypeHeaders
 
 def _collect_file_resources(request_obj):
     """Traverse the request object,
     collect the file-like objects in the return value,
     and replace the file value with cid:XXXX.
     """
+    import pdb; pdb.set_trace()
     iteritems = request_obj.iteritems()
 
     retval = {}
@@ -24,19 +27,26 @@ def _collect_file_resources(request_obj):
     return retval
 
 def universal_request_encoder(*args, **kwargs):
-    # look for anything that looks like
-    # a file in the request object.
+    """
+    request_encoder returns a tuple:
+        (entity, *headers_factory)
+    """
     method = args[0]
-    request_obj = kwargs.values()[0]
-    files = _collect_file_resources(request_obj)
 
-    envelope = adapters.xml_request(
-        method,
-        **kwargs)
+    # look for anything that looks like
+    # a file resource in the argument.
+    files = _collect_file_resources(kwargs)
 
-    boundary = uuid.uuid4().hex
+    # the envelope is always sent as xml
+    envelope = adapters.xml_request(method, **kwargs)
 
-    if len(files) > 0:
+    if len(files) == 0:
+        # Regular request, no files to upload.
+        # No extra headers are added
+        return (envelope, [])
+    else:
+        # create multipart/related chunks
+        boundary = uuid.uuid4().hex
         lines = ["multipart posting",
             "--%s" % boundary,
             "Content-Type: application/xml",
@@ -59,9 +69,14 @@ def universal_request_encoder(*args, **kwargs):
         lines.append("--%s" % boundary)
         lines.append('')
 
-    data = '\r\n'.join(lines)
+        data = '\r\n'.join(lines)
 
-    return data, boundary
+        # When there are files to upload, we need to change
+        # change the content-type to multipart/related.
+        headers_factory = partial(MultipartContentTypeHeaders,
+                            subtype='related',
+                            boundary=boundary)
+        return data, [headers_factory]
 
 def default_request_encoder(*args, **kwargs):
     return adapters.xml_request(*args, **kwargs)
@@ -74,9 +89,7 @@ def default_response_decoder(*args, **kwargs):
             objectify.fromstring(content, **kwargs)
         )
     else:
-        # import base64
-        # return base64.b64encode(content)
-        return content
+        return (headers, content)
 
 def logging_request_encoder(method, **params):
     encoded = default_request_encoder(method, **params)

@@ -1,7 +1,3 @@
-from functools import partial
-
-from refreshbooks.transport import MultipartContentTypeHeaders
-
 class RemoteMethod(object):
     """Ties python method calls into FreshBooks API calls.
 
@@ -16,21 +12,8 @@ class RemoteMethod(object):
 
     def __call__(self, *args, **kwargs):
         method = '.'.join(self.names)
-
         request = self.request_encoder(method, *args, **kwargs)
-        if isinstance(request, tuple):
-            # if we do have binary payload,
-            # we send the request out as multipart/related
-            # with the first part being the XML request envelope,
-            # and the subsequent binary payload of the file
-            data, boundary = request
-            raw_response = self.transport(data,
-                partial(MultipartContentTypeHeaders,
-                    subtype='related',
-                    boundary=boundary))
-        else:
-            raw_response = self.transport(request)
-
+        raw_response = self.transport(request)
         return self.response_decoder(raw_response)
 
     def __getattr__(self, name):
