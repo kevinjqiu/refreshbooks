@@ -9,7 +9,7 @@ from refreshbooks.transport import MultipartContentTypeHeaders
 
 def _collect_file_resources(request_obj):
     """Traverse the request object,
-    collect the file-like objects in the return value,
+    collect file-like objects in the return value,
     and replace the file value with cid:XXXX.
     """
     iteritems = request_obj.iteritems()
@@ -42,7 +42,7 @@ def default_request_encoder(*args, **kwargs):
     if len(files) == 0:
         # Regular request, no files to upload.
         # No extra headers are added
-        return (envelope, [])
+        return envelope, []
     else:
         # create multipart/related chunks
         boundary = uuid.uuid4().hex
@@ -68,14 +68,14 @@ def default_request_encoder(*args, **kwargs):
         lines.append("--%s" % boundary)
         lines.append('')
 
-        data = '\r\n'.join(lines)
+        entity = '\r\n'.join(lines)
 
         # When there are files to upload, we need to change
         # change the content-type to multipart/related.
         headers_factory = partial(MultipartContentTypeHeaders,
                             subtype='related',
                             boundary=boundary)
-        return data, [headers_factory]
+        return entity, [headers_factory]
 
 def default_response_decoder(*args, **kwargs):
     headers, content = args[0]
