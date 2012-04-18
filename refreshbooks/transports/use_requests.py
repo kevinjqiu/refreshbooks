@@ -8,11 +8,14 @@ class Transport(object):
         self.headers_factory = headers_factory
         self.verify_ssl_cert = verify_ssl_cert
 
-    def __call__(self, entity):
+    def __call__(self, entity, *extra_headers):
+        headers_factory = self.headers_factory
+        for header in extra_headers:
+            headers_factory = header(headers_factory)
 
         resp = requests.post(
             self.url,
-            headers=self.headers_factory(),
+            headers=headers_factory(),
             data=entity,
             verify=self.verify_ssl_cert
         )
