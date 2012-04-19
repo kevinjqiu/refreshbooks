@@ -18,12 +18,29 @@ def _collect_file_resources(request_obj):
     for key, value in iteritems:
         if isinstance(value, dict):
             retval.update(_collect_file_resources(value))
-        elif isinstance(value, file):
-            # generate a unique cid
+        elif hasattr(value, 'read') and callable(value.read):
+            # file-like objects, such as StringIO or CStringIO
+            # are acceptable.
             cid = uuid.uuid4().hex
             retval[cid] = value
             request_obj[key] = 'cid:%s' % cid
     return retval
+
+def _get_resource_name_and_mime_type(resource):
+    if hasattr(resource, 'name'):
+        filename = resource.name
+        mimetype, _ = mimetypes.guess_type(filename)
+    else:
+        import imghdr
+        img_type = imghdr.what(resource)
+        if img_type is None:
+            mimetype = 'application/octet-stream'
+            img_type = 'bin'
+        else:
+            mimetype = 'image/%s' % img_type
+        filename = ".".join((uuid.uuid4().hex, img_type))
+
+    return filename, mimetype
 
 def default_request_encoder(*args, **kwargs):
     """
@@ -53,24 +70,24 @@ def default_request_encoder(*args, **kwargs):
             '<?xml version="1.0" encoding="utf-8"?>\n'+envelope,
         ]
 
-        for cid, file_to_upload in files.iteritems():
-            filename = file_to_upload.name
-            mimetype, _ = mimetypes.guess_type(filename)
+        for cid, resource in files.iteritems():
+            filename, mimetype = _get_resource_name_and_mime_type(resource)
+
             lines.append("--%s" % boundary)
             lines.append("Content-Type: %s" % mimetype)
             lines.append('Content-Disposition: attachment; filename="%s"' % filename)
             lines.append("Content-ID: <%s>" % cid)
             lines.append('')
-            lines.append(file_to_upload.read())
+            lines.append(resource.read())
             lines.append('')
-            file_to_upload.close()
+            resource.close()
 
         lines.append("--%s" % boundary)
         lines.append('')
 
         entity = '\r\n'.join(lines)
 
-        # When there are files to upload, we need to change
+        # When there are files to upload, we need to
         # change the content-type to multipart/related.
         headers_factory = partial(MultipartContentTypeHeaders,
                             subtype='related',
