@@ -1,6 +1,6 @@
 class Transport(object):
 
-    def __init__(self, url, headers_factory, verify_ssl_cert=False):
+    def __init__(self, url, headers_factory, verify_ssl_cert=True):
         self.url = url
         self.headers_factory = headers_factory
         self.verify_ssl_cert = verify_ssl_cert
