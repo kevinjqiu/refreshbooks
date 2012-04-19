@@ -42,6 +42,39 @@ def _get_resource_name_and_mime_type(resource):
 
     return filename, mimetype
 
+def _encode_multipart_request(xml_envelope, cid_file_map, boundary):
+    # create multipart/related chunks
+    lines = ["multipart posting",
+        "--%s" % boundary,
+        "Content-Type: application/xml",
+        "",
+        '<?xml version="1.0" encoding="utf-8"?>\n'+xml_envelope,
+    ]
+
+    for cid, resource in cid_file_map.iteritems():
+        filename, mimetype = _get_resource_name_and_mime_type(resource)
+
+        lines.append("--%s" % boundary)
+        lines.append("Content-Type: %s" % mimetype)
+        lines.append('Content-Disposition: attachment; filename="%s"' % filename)
+        lines.append("Content-ID: <%s>" % cid)
+        lines.append('')
+        lines.append(resource.read())
+        lines.append('')
+        resource.close()
+
+    lines.append("--%s" % boundary)
+    lines.append('')
+
+    entity = '\r\n'.join(lines)
+
+    # When there are files to upload, we need to
+    # change the content-type to multipart/related.
+    headers_factory = partial(MultipartContentTypeHeaders,
+                        subtype='related',
+                        boundary=boundary)
+    return entity, [headers_factory]
+
 def default_request_encoder(*args, **kwargs):
     """
     request_encoder returns a tuple:
@@ -61,38 +94,10 @@ def default_request_encoder(*args, **kwargs):
         # No extra headers are added
         return envelope, []
     else:
-        # create multipart/related chunks
-        boundary = uuid.uuid4().hex
-        lines = ["multipart posting",
-            "--%s" % boundary,
-            "Content-Type: application/xml",
-            "",
-            '<?xml version="1.0" encoding="utf-8"?>\n'+envelope,
-        ]
-
-        for cid, resource in files.iteritems():
-            filename, mimetype = _get_resource_name_and_mime_type(resource)
-
-            lines.append("--%s" % boundary)
-            lines.append("Content-Type: %s" % mimetype)
-            lines.append('Content-Disposition: attachment; filename="%s"' % filename)
-            lines.append("Content-ID: <%s>" % cid)
-            lines.append('')
-            lines.append(resource.read())
-            lines.append('')
-            resource.close()
-
-        lines.append("--%s" % boundary)
-        lines.append('')
-
-        entity = '\r\n'.join(lines)
-
-        # When there are files to upload, we need to
-        # change the content-type to multipart/related.
-        headers_factory = partial(MultipartContentTypeHeaders,
-                            subtype='related',
-                            boundary=boundary)
-        return entity, [headers_factory]
+        return _encode_multipart_request(
+            envelope,
+            files,
+            boundary=uuid.uuid4().hex)
 
 def default_response_decoder(*args, **kwargs):
     headers, content = args[0]

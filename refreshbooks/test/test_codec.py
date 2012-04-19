@@ -82,4 +82,3 @@ def test_collect_file_resources___nested():
 
     assert file_cid_map[extract_cid(request_obj['folder']['pic'])] == pic_obj1
     assert file_cid_map[extract_cid(request_obj['folder']['child']['pic'])] == pic_obj2
-
