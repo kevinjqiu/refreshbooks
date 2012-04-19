@@ -1,6 +1,7 @@
 import sys
 import uuid
 import mimetypes
+import imghdr
 
 from functools import partial
 from lxml import objectify
@@ -31,7 +32,6 @@ def _get_resource_name_and_mime_type(resource):
         filename = resource.name
         mimetype, _ = mimetypes.guess_type(filename)
     else:
-        import imghdr
         img_type = imghdr.what(resource)
         if img_type is None:
             mimetype = 'application/octet-stream'
