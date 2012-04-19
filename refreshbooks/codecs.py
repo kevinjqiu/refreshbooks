@@ -80,7 +80,8 @@ def default_request_encoder(*args, **kwargs):
 def default_response_decoder(*args, **kwargs):
     headers, content = args[0]
 
-    if headers['content-type'].startswith('application/xml'):
+    content_type, _ = headers['content-type'].split(';', 1)
+    if content_type == 'application/xml':
         return adapters.fail_to_exception_response(
             objectify.fromstring(content, **kwargs)
         )
