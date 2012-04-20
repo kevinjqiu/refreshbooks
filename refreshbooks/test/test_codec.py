@@ -3,6 +3,7 @@ from mock import Mock
 
 from refreshbooks.codecs import _get_resource_name_and_mime_type
 from refreshbooks.codecs import _collect_file_resources
+from refreshbooks.codecs import _encode_multipart_request
 
 RANDOM_UUID_MOCK = Mock(hex='a4b420939be842a186f0ea1ecbc4baa3')
 
@@ -82,3 +83,43 @@ def test_collect_file_resources___nested():
 
     assert file_cid_map[extract_cid(request_obj['folder']['pic'])] == pic_obj1
     assert file_cid_map[extract_cid(request_obj['folder']['child']['pic'])] == pic_obj2
+
+@patch('refreshbooks.codecs._get_resource_name_and_mime_type')
+def test_encode_multipart_request(mock_resource_detect):
+    from StringIO import StringIO
+
+    mock_resource_detect.return_value = ('avatar.png', 'image/png')
+    boundary = 'CUL-DE-SAC'
+    xml_envelope = "".join([
+        '<request method="awesome.method">',
+        '<profile>',
+        '<name>foobar</name>',
+        '<avatar>cid:ebenezer</avatar>',
+        '</profile>',
+        '</request>'])
+
+    cid_file_map = {
+        'ebenezer' : StringIO('\x00\x01\x02')
+    }
+
+    expected = "\r\n".join([
+        'multipart posting',
+        '--CUL-DE-SAC',
+        'Content-Type: application/xml',
+        '',
+        '<?xml version="1.0" encoding="utf-8"?>\n'+xml_envelope,
+        '--CUL-DE-SAC',
+        'Content-Type: image/png',
+        'Content-Disposition: attachment; filename="avatar.png"',
+        'Content-ID: <ebenezer>',
+        '',
+        '\x00\x01\x02',
+        '',
+        '--CUL-DE-SAC',
+        ''])
+
+    content, headers_factory = _encode_multipart_request(xml_envelope, cid_file_map, boundary)
+
+    assert expected == content
+    assert len(headers_factory) == 1
+    assert headers_factory[0].keywords == {'subtype':'related', 'boundary':'CUL-DE-SAC'}
