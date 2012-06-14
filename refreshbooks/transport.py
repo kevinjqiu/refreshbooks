@@ -52,7 +52,7 @@ class HeadersFactory(object):
         self.headers = headers
 
     def __call__(self):
-        headers = self.base_headers_factory()
+        headers = dict(self.base_headers_factory())
         for key, value in self.headers.iteritems():
             headers[key] = value
         return headers
